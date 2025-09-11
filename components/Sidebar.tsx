@@ -38,6 +38,12 @@ export default function Sidebar({ components }: { components: ComponentData[] })
           })}
         </div>
       )}
+      <div className="sidebar-footer">
+        <button className="logout-btn" title="Logout" onClick={() => { window.location.href = '/api/logout'; }}>
+          <span className="logout-icn" aria-hidden>⏻</span>
+          <span className="logout-label">Logout</span>
+        </button>
+      </div>
     </aside>
   );
 }

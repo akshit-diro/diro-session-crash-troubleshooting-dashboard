@@ -33,19 +33,30 @@ export default function Filters({
     <div className={`filters ${isCompact ? 'compact' : ''}`}>
       <div className="filters-title">Filters</div>
       <div className="filter-grid">
-        {componentsData.map((c) => (
-          <button
-            key={c.id}
-            className={`chip comp-${c.id} ${state.components.size === 0 || state.components.has(c.id) ? 'active' : ''}`}
-            onClick={() => toggleComp(c.id)}
-            title={`Last seen: ${lastTimestamps[c.id] || '—'}`}
-          >
-            <span className="chip-title">{c.displayName}</span>
-            {!isCompact && (
-              <span className="chip-sub">{lastTimestamps[c.id] ? new Date(lastTimestamps[c.id]).toLocaleTimeString() : '—'}</span>
-            )}
-          </button>
-        ))}
+        {isCompact
+          ? componentsData.flatMap((c) => c.logSources.map((s) => ({ c, s }))).map(({ c, s }) => (
+              <button
+                key={s.id}
+                className={`chip comp-${c.id} ${state.sources.size === 0 || state.sources.has(s.id) ? 'active' : ''}`}
+                onClick={() => toggleSource(s.id)}
+                title={`${c.displayName} (${s.displayName})`}
+              >
+                <span className="chip-title">{c.displayName} ({s.displayName})</span>
+              </button>
+            ))
+          : componentsData.map((c) => (
+              <button
+                key={c.id}
+                className={`chip comp-${c.id} ${state.components.size === 0 || state.components.has(c.id) ? 'active' : ''}`}
+                onClick={() => toggleComp(c.id)}
+                title={`Last seen: ${lastTimestamps[c.id] || '—'}`}
+              >
+                <span className="chip-title">{c.displayName}</span>
+                {!isCompact && (
+                  <span className="chip-sub">{lastTimestamps[c.id] ? new Date(lastTimestamps[c.id]).toLocaleTimeString() : '—'}</span>
+                )}
+              </button>
+            ))}
       </div>
       {!isCompact && (
         <div className="filter-group">
