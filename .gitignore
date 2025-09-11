@@ -4,6 +4,8 @@ node_modules/
 # Next.js
 .next/
 out/
+dist/
+coverage/
 
 # Env
 .env
@@ -21,5 +23,5 @@ pnpm-debug.log*
 
 # Sample Data
 data/
-mockData.ts
+mockData.local.ts
 
