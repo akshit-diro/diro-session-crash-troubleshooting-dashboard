@@ -10,6 +10,9 @@ export default function Timeline({ entries, components }: { entries: LogEntry[];
   const compMap = new Map(components.map((c) => [c.id, c]));
   return (
     <div className="timeline">
+      {entries.length === 0 && (
+        <div className="timeline-empty">No logs to display. Adjust Filters to see results.</div>
+      )}
       {entries.map((e) => {
         const c = compMap.get(e.component) || compMap.get(e.component as any);
         const cls = classForComponent(e.component);
@@ -31,4 +34,3 @@ export default function Timeline({ entries, components }: { entries: LogEntry[];
     </div>
   );
 }
-

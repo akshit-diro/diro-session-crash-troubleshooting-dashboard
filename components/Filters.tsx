@@ -31,6 +31,7 @@ export default function Filters({
   const isCompact = mode === 'compact';
   return (
     <div className={`filters ${isCompact ? 'compact' : ''}`}>
+      <div className="filters-title">Filters</div>
       <div className="filter-grid">
         {componentsData.map((c) => (
           <button
