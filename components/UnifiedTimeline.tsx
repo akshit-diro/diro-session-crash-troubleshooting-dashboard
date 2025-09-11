@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import Filters, { type FiltersState } from './Filters';
 import Timeline from './Timeline';
 import type { ComponentData, LogEntry } from '../lib/types';
+import Collapsible from './Collapsible';
 
 export default function UnifiedTimeline({
   components,
@@ -26,13 +27,18 @@ export default function UnifiedTimeline({
 
   return (
     <>
-      <Filters
-        mode="compact"
-        componentsData={components}
-        lastTimestamps={lastTimestamps}
-        state={filters}
-        onChange={setFilters}
-      />
+
+    <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100">Unified Timeline</h2>
+
+      <Collapsible title="Filters" defaultOpen>
+        <Filters
+          mode="compact"
+          componentsData={components}
+          lastTimestamps={lastTimestamps}
+          state={filters}
+          onChange={setFilters}
+        />
+      </Collapsible>
       <Timeline entries={filteredLogs} components={components} />
     </>
   );

@@ -1,4 +1,4 @@
-import type { LogEntry, SessionData, ComponentData } from './types';
+import type { LogEntry, SessionData, ComponentData, HypothesisItem, AlertItem } from './types';
 
 // Import from existing root mockData.ts to avoid duplication
 // eslint-disable-next-line @typescript-eslint/no-var-requires
@@ -7,6 +7,9 @@ const mock = require('../mockData');
 export const components: ComponentData[] = mock.components || [];
 export const allEntries: LogEntry[] = mock.mockLogEntries || [];
 export const mockSessionData: SessionData | undefined = mock.mockSessionData;
+export const hypotheses: HypothesisItem[] = mock.mockHypotheses || [];
+export const alerts: AlertItem[] = mock.mockAlerts || [];
+export const isMockMode: boolean = true;
 
 export function getUnifiedLogsBySession(sessionId: string): LogEntry[] {
   const entries: LogEntry[] = (allEntries || []).filter((e: LogEntry) => {
@@ -27,4 +30,3 @@ export function getLastTimestamps(entries: LogEntry[]): Record<string, string> {
   for (const e of entries) last[e.component] = e.timestamp;
   return last;
 }
-

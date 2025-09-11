@@ -4,3 +4,8 @@
 
 /* Minimal token for coordinating sidebar width */
 :root { --sidebar-w: 260px; }
+
+@layer base {
+  html, body, #__next { height: 100%; }
+  body { @apply bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100; }
+}

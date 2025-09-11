@@ -1,5 +1,5 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
-import { components, getSession, getUnifiedLogsBySession, getLastTimestamps } from '../../lib/data';
+import { components, getSession, getUnifiedLogsBySession, getLastTimestamps, hypotheses, alerts, isMockMode } from '../../lib/data';
 
 export default function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'GET') return res.status(405).json({ error: 'Method not allowed' });
@@ -8,6 +8,5 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
   const session = getSession(id);
   const logs = getUnifiedLogsBySession(id);
   const lastTimestamps = getLastTimestamps(logs);
-  return res.status(200).json({ session, components, logs, lastTimestamps });
+  return res.status(200).json({ session, components, logs, lastTimestamps, hypotheses, alerts, mock: isMockMode });
 }
-

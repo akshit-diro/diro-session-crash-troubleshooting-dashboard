@@ -3,9 +3,10 @@ import Collapsible from '../components/Collapsible';
 import Sidebar from '../components/Sidebar';
 import SessionOverview from '../components/SessionOverview';
 import TitleBar from '../components/TitleBar';
-// import Alerts from '../components/Alerts';
-// import CrashHypothesis from '../components/CrashHypothesis';
+import Alerts from '../components/Alerts';
+import CrashHypothesis from '../components/CrashHypothesis';
 import UnifiedTimeline from '../components/UnifiedTimeline';
+import CrashAnalysis from '../components/CrashAnalysis';
 import type { ComponentData, LogEntry, SessionData } from '../lib/types';
 
 interface SessionResponse {
@@ -13,6 +14,9 @@ interface SessionResponse {
   components: ComponentData[];
   logs: LogEntry[];
   lastTimestamps: Record<string, string>;
+  hypotheses: any[];
+  alerts: any[];
+  mock?: boolean;
 }
 
 export default function Home() {
@@ -57,31 +61,32 @@ export default function Home() {
           onLoad={() => fetchSession(sessionId)}
           loading={loading}
           error={error}
+          isMockData={data?.mock}
         />
 
-        <Collapsible title="Session Overview" defaultOpen>
-          {data && <SessionOverview session={data.session} />}
-        </Collapsible>
+        {data && 
 
-        {/* <div className="two-col">
-          <Collapsible title="Alerts (Slack/Sentry/New Relic)" defaultOpen>
-            <Alerts summary="No alert integrations in mock mode" />
-          </Collapsible>
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
+        
+          <SessionOverview session={data.session} alerts={data.alerts} />
 
-          <Collapsible title="Crash Scenario Hypothesis" defaultOpen>
-            <CrashHypothesis hypothesis={hypothesis} />
-          </Collapsible>
-        </div> */}
+          {/* <Collapsible title="Crash Scenario Hypotheses" defaultOpen>
+            <CrashHypothesis items={(data?.hypotheses || []) as any} />
+          </Collapsible> */}
 
-        <Collapsible title="Unified Timeline" defaultOpen>
-          {data && (
-            <UnifiedTimeline
-              components={data.components}
-              logs={data.logs}
-              lastTimestamps={data.lastTimestamps}
-            />
-          )}
-        </Collapsible>
+            <div className="col-span-2">
+                <CrashAnalysis components={data.components} logs={data.logs} />
+            </div>
+
+        </div>}
+
+        {data && (
+          <UnifiedTimeline
+            components={data.components}
+            logs={data.logs}
+            lastTimestamps={data.lastTimestamps}
+          />
+        )}
       </main>
     </div>
   );
