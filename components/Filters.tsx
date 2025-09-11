@@ -29,45 +29,71 @@ export default function Filters({
     onChange({ ...state, sources: next });
   };
   const isCompact = mode === 'compact';
+  const compBg: Record<string, string> = {
+    loadbalancer: 'bg-pink-50',
+    gateway: 'bg-purple-50',
+    booking_engine: 'bg-cyan-50',
+    tomcat: 'bg-blue-50',
+    guacd: 'bg-green-50',
+    guacamole: 'bg-emerald-50',
+    terminal_server: 'bg-indigo-50',
+    browser: 'bg-teal-50',
+    extension: 'bg-orange-50',
+    automation: 'bg-rose-50',
+    keepalive: 'bg-yellow-50',
+  };
   return (
-    <div className={`filters ${isCompact ? 'compact' : ''}`}>
-      <div className="filters-title">Filters</div>
-      <div className="filter-grid">
+    <div className="grid gap-2 mb-3">
+      <div className="text-[12px] uppercase text-slate-500 tracking-wide">Filters</div>
+      <div className="grid grid-cols-6 gap-2 max-[1100px]:grid-cols-4 max-[800px]:grid-cols-2">
         {isCompact
-          ? componentsData.flatMap((c) => c.logSources.map((s) => ({ c, s }))).map(({ c, s }) => (
-              <button
-                key={s.id}
-                className={`chip comp-${c.id} ${state.sources.size === 0 || state.sources.has(s.id) ? 'active' : ''}`}
-                onClick={() => toggleSource(s.id)}
-                title={`${c.displayName} (${s.displayName})`}
-              >
-                <span className="chip-title">{c.displayName} ({s.displayName})</span>
-              </button>
-            ))
-          : componentsData.map((c) => (
-              <button
-                key={c.id}
-                className={`chip comp-${c.id} ${state.components.size === 0 || state.components.has(c.id) ? 'active' : ''}`}
-                onClick={() => toggleComp(c.id)}
-                title={`Last seen: ${lastTimestamps[c.id] || '—'}`}
-              >
-                <span className="chip-title">{c.displayName}</span>
-                {!isCompact && (
-                  <span className="chip-sub">{lastTimestamps[c.id] ? new Date(lastTimestamps[c.id]).toLocaleTimeString() : '—'}</span>
-                )}
-              </button>
-            ))}
+          ? componentsData.flatMap((c) => c.logSources.map((s) => ({ c, s }))).map(({ c, s }) => {
+              const active = state.sources.size === 0 || state.sources.has(s.id);
+              return (
+                <button
+                  key={s.id}
+                  className={`border border-slate-200 ${compBg[c.id] || 'bg-slate-50'} text-slate-800 px-2 py-1.5 rounded-lg text-left ${active ? 'ring-2 ring-indigo-300' : ''}`}
+                  onClick={() => toggleSource(s.id)}
+                  title={`${c.displayName} (${s.displayName})`}
+                >
+                  <span className="block font-semibold text-[12px]">{c.displayName} ({s.displayName})</span>
+                </button>
+              );
+            })
+          : componentsData.map((c) => {
+              const active = state.components.size === 0 || state.components.has(c.id);
+              return (
+                <button
+                  key={c.id}
+                  className={`border border-slate-200 ${compBg[c.id] || 'bg-slate-50'} text-slate-800 px-2 py-1.5 rounded-lg text-left ${active ? 'ring-2 ring-indigo-300' : ''}`}
+                  onClick={() => toggleComp(c.id)}
+                  title={`Last seen: ${lastTimestamps[c.id] || '—'}`}
+                >
+                  <span className="block font-semibold text-[12px]">{c.displayName}</span>
+                  {!isCompact && (
+                    <span className="block text-[11px] text-slate-500">{lastTimestamps[c.id] ? new Date(lastTimestamps[c.id]).toLocaleTimeString() : '—'}</span>
+                  )}
+                </button>
+              );
+            })}
       </div>
       {!isCompact && (
-        <div className="filter-group">
-          <div className="filter-title">Log Sources</div>
-          <div className="filter-grid">
-            {componentsData.flatMap((c) => c.logSources.map((s) => ({ c, s }))).map(({ c, s }) => (
-              <button key={s.id} className={`chip light ${state.sources.size === 0 || state.sources.has(s.id) ? 'active' : ''}`} onClick={() => toggleSource(s.id)}>
-                <span className="chip-title">{c.displayName}</span>
-                <span className="chip-sub">{s.displayName}</span>
-              </button>
-            ))}
+        <div className="border border-dashed border-slate-200 p-2 rounded-lg">
+          <div className="text-[12px] uppercase text-slate-500 mb-2">Log Sources</div>
+          <div className="grid grid-cols-6 gap-2 max-[1100px]:grid-cols-4 max-[800px]:grid-cols-2">
+            {componentsData.flatMap((c) => c.logSources.map((s) => ({ c, s }))).map(({ c, s }) => {
+              const active = state.sources.size === 0 || state.sources.has(s.id);
+              return (
+                <button
+                  key={s.id}
+                  className={`border border-slate-200 ${compBg[c.id] || 'bg-slate-50'} text-slate-800 px-2 py-1.5 rounded-lg text-left opacity-90 ${active ? 'ring-2 ring-indigo-300' : ''}`}
+                  onClick={() => toggleSource(s.id)}
+                >
+                  <span className="block font-semibold text-[12px]">{c.displayName}</span>
+                  <span className="block text-[11px] text-slate-500">{s.displayName}</span>
+                </button>
+              );
+            })}
           </div>
         </div>
       )}

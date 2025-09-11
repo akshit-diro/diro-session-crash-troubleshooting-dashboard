@@ -47,9 +47,9 @@ export default function Home() {
   // }, [data]);
 
   return (
-    <div className="layout">
+    <div>
       <Sidebar components={data?.components || []} />
-      <main className="main">
+      <main className="min-h-screen p-4 grid gap-3" style={{ marginLeft: 'var(--sidebar-w, 260px)' }}>
         <TitleBar
           title="Diro Session Crash Troubleshooting"
           sessionId={sessionId}
