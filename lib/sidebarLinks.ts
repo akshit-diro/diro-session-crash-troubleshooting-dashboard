@@ -38,8 +38,8 @@ export const sidebarLinks: SidebarLinkConfig[] = [
 
 export function resolveSidebarHref(template: string, c: { id: string; name: string }): string {
   const encodedComponent = encodeURIComponent(c.name);
+  // Avoid String.replaceAll for wider TS/JS compatibility
   return template
-    .replaceAll('{component}', encodedComponent)
-    .replaceAll('{id}', encodeURIComponent(c.id));
+    .split('{component}').join(encodedComponent)
+    .split('{id}').join(encodeURIComponent(c.id));
 }
-
