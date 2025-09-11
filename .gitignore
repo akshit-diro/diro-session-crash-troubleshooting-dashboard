@@ -19,3 +19,7 @@ pnpm-debug.log*
 # OS
 .DS_Store
 
+# Sample Data
+data/
+mockData.ts
+
