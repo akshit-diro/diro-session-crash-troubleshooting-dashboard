@@ -45,7 +45,7 @@ export default function Filters({
   };
   return (
     <div className="grid gap-2 mb-3">
-      <div className="text-[12px] uppercase text-slate-500 dark:text-slate-400 tracking-wide">Filters</div>
+      {/* <div className="text-[12px] uppercase text-slate-500 dark:text-slate-400 tracking-wide">Filters</div> */}
       <div className="grid grid-cols-6 gap-2 max-[1100px]:grid-cols-4 max-[800px]:grid-cols-2">
         {isCompact
           ? componentsData.flatMap((c) => c.logSources.map((s) => ({ c, s }))).map(({ c, s }) => {

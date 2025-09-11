@@ -38,6 +38,16 @@ export default function UnifiedTimeline({
           state={filters}
           onChange={setFilters}
         />
+        {(filters.components.size > 0 || filters.sources.size > 0) && (
+          <div className="mb-2 flex items-center justify-end">
+            <button
+              className="text-xs px-2 py-1 rounded border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200"
+              onClick={() => setFilters({ components: new Set(), sources: new Set() })}
+            >
+              Clear Filters
+            </button>
+          </div>
+        )}
       </Collapsible>
       <Timeline entries={filteredLogs} components={components} />
     </>

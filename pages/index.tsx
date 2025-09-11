@@ -24,6 +24,7 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [data, setData] = useState<SessionResponse | null>(null);
+  const [showAlerts, setShowAlerts] = useState(false);
 
   const fetchSession = async (id: string) => {
     setLoading(true); setError(null);
@@ -50,10 +51,11 @@ export default function Home() {
   //   return 'No obvious crash root-cause; review warnings around disconnect timeframe.';
   // }, [data]);
 
+
   return (
     <div>
       <Sidebar components={data?.components || []} />
-      <main className="min-h-screen p-4 grid gap-3" style={{ marginLeft: 'var(--sidebar-w, 260px)' }}>
+      <main className="p-4 grid gap-3" style={{ marginLeft: 'var(--sidebar-w, 260px)' }}>
         <TitleBar
           title="Diro Session Crash Troubleshooting"
           sessionId={sessionId}
@@ -64,11 +66,17 @@ export default function Home() {
           isMockData={data?.mock}
         />
 
-        {data && 
+        {data && data?.session && data.session.status === "Unknown" && (
+          <div className="p-4 border border-slate-200 dark:border-slate-700 rounded bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200">
+            No data available for session "{sessionId}". Please verify the Session ID and try again.
+          </div>
+        )}
 
-        <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
+        {data && data?.session && data.logs.length > 0 && data.session.status !== "Unknown" && (
+
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-3 relative">
         
-          <SessionOverview session={data.session} alerts={data.alerts} />
+          <SessionOverview session={data.session} onOpenAlerts={() => setShowAlerts(true)} />
 
           {/* <Collapsible title="Crash Scenario Hypotheses" defaultOpen>
             <CrashHypothesis items={(data?.hypotheses || []) as any} />
@@ -78,14 +86,31 @@ export default function Home() {
                 <CrashAnalysis components={data.components} logs={data.logs} />
             </div>
 
-        </div>}
+        </div>)}
 
-        {data && (
+        {data && data?.session && data.logs.length > 0 && data.session.status !== "Unknown" && (
           <UnifiedTimeline
             components={data.components}
             logs={data.logs}
             lastTimestamps={data.lastTimestamps}
           />
+        )}
+
+        {data && data?.session && data.session.status !== "Unknown" && showAlerts && (
+          <>
+            <div className="fixed inset-0 z-40 bg-black/20" onClick={() => setShowAlerts(false)} />
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+              <div className="w-[720px] max-w-[95vw] bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg shadow-xl">
+                <div className="flex items-center justify-between px-3 py-2 bg-slate-50 dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700">
+                  <div className="text-sm text-slate-600 dark:text-slate-300">Alerts (UTC)</div>
+                  <button className="px-2 py-1 rounded border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900" onClick={() => setShowAlerts(false)}>✕</button>
+                </div>
+                <div className="p-2">
+                  <Alerts alerts={data.alerts} />
+                </div>
+              </div>
+            </div>
+          </>
         )}
       </main>
     </div>
