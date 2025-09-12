@@ -36,6 +36,7 @@ export const sidebarLinks: SidebarLinkConfig[] = [
   { component: 'an_python', key: 'autonav-codes', label: 'Auto-Nav Error Codes', href: 'https://dirolabs.atlassian.net/wiki/spaces/AI/pages/6409650194/AutoNav+Error+Codes' },
   { component: 'keepalive', key: 'newrelic', label: 'New Relic', href: '#new_relic' },
   { component: 'keepalive', key: 'graylogs', label: 'Graylogs', href: 'https://graylog.dirolabs.com:9000' },
+  { component: 'keepalive', key: 'session-crash-scenario', label: 'Session Crash Scenarios', href: 'https://dirolabs.atlassian.net/wiki/spaces/AI/pages/6486949911/AutoNav+Session+Crash+Scenarios' },
 ];
 
 export function resolveSidebarHref(template: string, c: { id: string; name: string }): string {
