@@ -1,14 +1,14 @@
 import { useEffect, useMemo, useState } from 'react';
-import Collapsible from '../components/Collapsible';
 import Sidebar from '../components/Sidebar';
 import SessionOverview from '../components/SessionOverview';
 import TitleBar from '../components/TitleBar';
-import Alerts from '../components/Alerts';
 import RightAlertsSidebar from '../components/RightAlertsSidebar';
-import CrashHypothesis from '../components/CrashHypothesis';
 import UnifiedTimeline from '../components/UnifiedTimeline';
 import CrashAnalysis from '../components/CrashAnalysis';
 import type { ComponentData, LogEntry, SessionData } from '../lib/types';
+import LogSourceLoader, { type LoadStatus } from '../components/LogSourceLoader';
+import { getAvailableLogSourceTypes } from '../lib/fetchers';
+import type { LogSourceType } from '../lib/logSources';
 
 interface SessionResponse {
   session: SessionData;
@@ -26,14 +26,50 @@ export default function Home() {
   const [error, setError] = useState<string | null>(null);
   const [data, setData] = useState<SessionResponse | null>(null);
   const [showAlerts, setShowAlerts] = useState(false);
+  const [sourceOrder, setSourceOrder] = useState<LogSourceType[]>([]);
+  const [sourceStatus, setSourceStatus] = useState<Record<LogSourceType, LoadStatus>>({} as any);
 
   const fetchSession = async (id: string) => {
-    setLoading(true); setError(null);
+    setLoading(true); setError(null); setData(null);
     try {
-      const res = await fetch(`/api/session?id=${encodeURIComponent(id)}`);
-      if (!res.ok) throw new Error(`${res.status}`);
-      const json: SessionResponse = await res.json();
-      setData(json);
+      // 1) Fetch session meta (components, alerts, etc.)
+      const metaRes = await fetch(`/api/session-meta?id=${encodeURIComponent(id)}`);
+      if (!metaRes.ok) throw new Error(`${metaRes.status}`);
+      const meta = await metaRes.json();
+
+      // 2) Determine available source types and init loader state
+      const types: LogSourceType[] = getAvailableLogSourceTypes(meta.components);
+      setSourceOrder(types);
+      setSourceStatus(types.reduce((acc: any, t) => { acc[t] = 'pending'; return acc; }, {}));
+
+      // 3) Fetch logs per source type, updating loader progressively
+      let allLogs: LogEntry[] = [];
+      for (const t of types) {
+        setSourceStatus((prev) => ({ ...prev, [t]: 'loading' }));
+        try {
+          const r = await fetch(`/api/logs/${encodeURIComponent(t)}?session=${encodeURIComponent(id)}`);
+          if (!r.ok) throw new Error(`${r.status}`);
+          const j = await r.json();
+          allLogs = allLogs.concat(j.logs || []);
+          setSourceStatus((prev) => ({ ...prev, [t]: 'done' }));
+        } catch (e) {
+          setSourceStatus((prev) => ({ ...prev, [t]: 'error' }));
+        }
+      }
+      allLogs.sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
+      const lastTimestamps: Record<string, string> = {};
+      for (const e of allLogs) lastTimestamps[e.component] = e.timestamp;
+
+      const merged: SessionResponse = {
+        session: meta.session,
+        components: meta.components,
+        logs: allLogs,
+        lastTimestamps,
+        hypotheses: meta.hypotheses || [],
+        alerts: meta.alerts || [],
+        mock: meta.mock,
+      };
+      setData(merged);
     } catch (e: any) {
       setError(e.message || 'Failed');
       setData(null);
@@ -66,6 +102,10 @@ export default function Home() {
           error={error}
           isMockData={data?.mock}
         />
+
+        {loading && sourceOrder.length > 0 && (
+          <LogSourceLoader order={sourceOrder} status={sourceStatus} />
+        )}
 
         {data && data?.session && data.session.status === "Unknown" && (
           <div className="p-4 border border-slate-200 dark:border-slate-700 rounded bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200">
