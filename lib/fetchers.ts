@@ -1,5 +1,6 @@
 import type { LogEntry, ComponentData } from './types';
 import { classifyLogSourceType, type LogSourceType } from './logSources';
+import { fetchGraylogLogs, configFromEnv as graylogConfigFromEnv } from './adapters/graylog';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const mock = require('../mockData');
@@ -18,6 +19,30 @@ export function getAvailableLogSourceTypes(components: ComponentData[]): LogSour
 
 // Fetch logs for a specific "platform"/type in mock mode by filtering by logSource suffix
 export async function fetchLogsForType(sessionId: string, type: LogSourceType): Promise<LogEntry[]> {
+  if (type === 'graylog') {
+    const cfg = graylogConfigFromEnv();
+    if (cfg) {
+      const results = await fetchGraylogLogs(sessionId, cfg);
+      results.sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
+      if (process.env.DEBUG_GRAYLOG === '1') {
+        // eslint-disable-next-line no-console
+        console.log('[graylog] fetched', results.length, 'entries for session', sessionId);
+        if (results[0]) {
+          // eslint-disable-next-line no-console
+          console.log('[graylog] first entry', {
+            id: results[0].id,
+            timestamp: results[0].timestamp,
+            component: results[0].component,
+            level: results[0].level,
+            message: results[0].message,
+          });
+        }
+      }
+      return results;
+    }
+  }
+
+  // Default: mock mode, filter by source type
   const all: LogEntry[] = (mock.mockLogEntries || []) as LogEntry[];
   const filtered = all.filter((e) => {
     const s = JSON.stringify(e);
@@ -38,4 +63,3 @@ export async function fetchAllByTypes(sessionId: string, types: LogSourceType[])
   merged.sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
   return merged;
 }
-
