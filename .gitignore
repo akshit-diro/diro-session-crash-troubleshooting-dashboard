@@ -25,3 +25,5 @@ pnpm-debug.log*
 data/
 mockData.local.ts
 
+.vscode/
+
