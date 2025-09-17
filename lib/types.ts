@@ -33,6 +33,7 @@ export interface SessionData {
   tsUsername?: string;
   tsIpAddress?: string;
   tsSessionId?: string;
+  sourceVM?: string;
 }
 
 export interface HypothesisItem {
