@@ -10,14 +10,34 @@ export default function SessionOverview({ session, onOpenAlerts }: Readonly<{ se
           <span aria-hidden>🔔</span>
         </button>
       </div>
-      <div className="grid grid-cols-[repeat(auto-fit,minmax(180px,1fr))] gap-3 p-3">
-        <div className="inline-flex gap-1.5"><span className="text-slate-500">Session:</span><span className="font-semibold">{session.sessionId}</span></div>
-        <div className="inline-flex gap-1.5"><span className="text-slate-500">Last Indicator:</span><span className="font-semibold">{session.status || '—'}</span></div>
-        <div className="inline-flex gap-1.5"><span className="text-slate-500">Started Indicator Time:</span><span className="font-semibold">{formatDateTimeUTC(session.startTime)}</span></div>
-        <div className="inline-flex gap-1.5"><span className="text-slate-500">Last Indicator Time:</span><span className="font-semibold">{formatDateTimeUTC(session.endTime)}</span></div>
-        <div className="inline-flex gap-1.5"><span className="text-slate-500">TS Username:</span><span className="font-semibold">{session.tsUsername || '—'}</span></div>
-        <div className="inline-flex gap-1.5"><span className="text-slate-500">Source VM:</span><span className="font-semibold">{session.sourceVM || '—'}</span></div>
-        <div className="inline-flex gap-1.5"><span className="text-slate-500">TS Session:</span><span className="font-semibold">{session.tsSessionId || '—'}</span></div>
+      <div className="grid grid-cols-[auto_auto_1fr] gap-x-2 gap-y-2 p-3">
+        <span className="text-slate-500">Session</span>
+        <span className="text-slate-500">:</span>
+        <span className="font-semibold">{session.sessionId}</span>
+        
+        <span className="text-slate-500">Last Indicator</span>
+        <span className="text-slate-500">:</span>
+        <span className="font-semibold">{session.status || '—'}</span>
+        
+        <span className="text-slate-500">Started Indicator Time</span>
+        <span className="text-slate-500">:</span>
+        <span className="font-semibold">{formatDateTimeUTC(session.startTime)}</span>
+        
+        <span className="text-slate-500">Last Indicator Time</span>
+        <span className="text-slate-500">:</span>
+        <span className="font-semibold">{formatDateTimeUTC(session.endTime)}</span>
+        
+        <span className="text-slate-500">TS Username</span>
+        <span className="text-slate-500">:</span>
+        <span className="font-semibold">{session.tsUsername || '—'}</span>
+        
+        <span className="text-slate-500">Source VM</span>
+        <span className="text-slate-500">:</span>
+        <span className="font-semibold">{session.sourceVM || '—'}</span>
+        
+        <span className="text-slate-500">TS Session</span>
+        <span className="text-slate-500">:</span>
+        <span className="font-semibold">{session.tsSessionId || '—'}</span>
       </div>
     </div>
   );

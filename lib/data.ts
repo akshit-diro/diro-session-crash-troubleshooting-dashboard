@@ -67,13 +67,30 @@ function extractSessionData(sessionDoc: any, sessionId: string): SessionData {
   const status = indicator.progress_name || 'Unknown';
   
   // Get end time from indicator.time (convert from timestamp to ISO string)
-  const endTime = indicator.time ? new Date(parseInt(indicator.time)).toISOString() : '';
+  let endTime = '';
+  if (indicator.time) {
+    let endTimestamp = typeof indicator.time === 'string' ? parseInt(indicator.time) : indicator.time;
+    // If timestamp is in seconds (10 digits), convert to milliseconds
+    if (endTimestamp.toString().length === 10) {
+      endTimestamp = endTimestamp * 1000;
+    }
+    endTime = new Date(endTimestamp).toISOString();
+  }
   
   // Get start time from captureIndicators - find "Started" with progress_no "2"
   const startIndicator = captureIndicators.find((item: any) => 
     item.progress_name === 'Started' && item.progress_no === '2'
   );
-  const startTime = startIndicator?.time ? new Date(parseInt(startIndicator.time)).toISOString() : '';
+  
+  let startTime = '';
+  if (startIndicator?.time) {
+    let startTimestamp = typeof startIndicator.time === 'string' ? parseInt(startIndicator.time) : startIndicator.time;
+    // If timestamp is in seconds (10 digits), convert to milliseconds
+    if (startTimestamp.toString().length === 10) {
+      startTimestamp = startTimestamp * 1000;
+    }
+    startTime = new Date(startTimestamp).toISOString();
+  }
   
   // Get source VM from vmType
   const sourceVM = vmType.sourceVM || '';

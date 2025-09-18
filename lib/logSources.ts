@@ -1,4 +1,4 @@
-export type LogSourceType = 'new_relic' | 'graylog' | 'powershell';
+export type LogSourceType = 'new_relic' | 'graylog';
 
 export interface LogSourceKind {
   key: LogSourceType;
@@ -11,13 +11,12 @@ export function classifyLogSourceType(idOrName: string): LogSourceType | null {
   // docker_logs originate from New Relic sources in our setup
   if (s.includes('docker_logs')) return 'new_relic';
   if (s.includes('graylogs') || s.includes('graylog')) return 'graylog';
-  // TS logs are collected via PowerShell
-  if (s.includes('powershell') || s.includes('eventlogs') || s.includes('eventlog')) return 'powershell';
+  // TS logs are now fetched via Graylog
+  if (s.includes('powershell') || s.includes('eventlogs') || s.includes('eventlog')) return 'graylog';
   return null;
 }
 
 export const LOG_SOURCE_KINDS: LogSourceKind[] = [
   { key: 'new_relic', label: 'New Relic' },
   { key: 'graylog', label: 'Graylog' },
-  { key: 'powershell', label: 'PowerShell' },
 ];

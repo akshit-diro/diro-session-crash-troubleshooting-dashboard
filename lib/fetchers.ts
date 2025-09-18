@@ -1,6 +1,7 @@
 import type { LogEntry, ComponentData } from './types';
 import { classifyLogSourceType, type LogSourceType } from './logSources';
-import { fetchGraylogLogs, configFromEnv as graylogConfigFromEnv } from './adapters/graylog';
+import { fetchGraylogLogs, fetchTSLogsFromGraylog, configFromEnv as graylogConfigFromEnv } from './adapters/graylog';
+import { fetchSessionDocument } from './data';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const mock = require('../mockData');

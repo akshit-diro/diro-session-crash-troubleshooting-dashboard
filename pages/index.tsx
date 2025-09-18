@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import Sidebar from '../components/Sidebar';
 import SessionOverview from '../components/SessionOverview';
 import TitleBar from '../components/TitleBar';
@@ -6,7 +6,7 @@ import RightAlertsSidebar from '../components/RightAlertsSidebar';
 import UnifiedTimeline from '../components/UnifiedTimeline';
 import CrashAnalysis from '../components/CrashAnalysis';
 import type { ComponentData, LogEntry, SessionData } from '../lib/types';
-import LogSourceLoader, { type LoadStatus } from '../components/LogSourceLoader';
+import LogSourceLoader, { type LoadStatus, type SessionDocStatus } from '../components/LogSourceLoader';
 import { getAvailableLogSourceTypes } from '../lib/fetchers';
 import type { LogSourceType } from '../lib/logSources';
 
@@ -21,21 +21,25 @@ interface SessionResponse {
 }
 
 export default function Home() {
-  const [sessionId, setSessionId] = useState('US-ZqLRz0');
+  const [sessionId, setSessionId] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [data, setData] = useState<SessionResponse | null>(null);
   const [showAlerts, setShowAlerts] = useState(false);
   const [sourceOrder, setSourceOrder] = useState<LogSourceType[]>([]);
   const [sourceStatus, setSourceStatus] = useState<Record<LogSourceType, LoadStatus>>({} as any);
+  const [sessionDocStatus, setSessionDocStatus] = useState<SessionDocStatus>({ status: 'pending' });
 
   const fetchSession = async (id: string) => {
     setLoading(true); setError(null); setData(null);
+    setSessionDocStatus({ status: 'pending' });
     try {
-      // 1) Fetch session meta (components, alerts, etc.)
+      // 1) Fetch session meta (components, alerts, etc.) - this includes session document fetching
+      setSessionDocStatus({ status: 'loading' });
       const metaRes = await fetch(`/api/session-meta?id=${encodeURIComponent(id)}`);
       if (!metaRes.ok) throw new Error(`${metaRes.status}`);
       const meta = await metaRes.json();
+      setSessionDocStatus({ status: 'done' });
 
       // 2) Determine available source types and init loader state
       const types: LogSourceType[] = getAvailableLogSourceTypes(meta.components);
@@ -51,8 +55,16 @@ export default function Home() {
           if (!r.ok) throw new Error(`${r.status}`);
           const j = await r.json();
           allLogs = allLogs.concat(j.logs || []);
+          
+          // If this is graylog and we have TSLogs, include them too
+          if (t === 'graylog' && j.TSLogs && Array.isArray(j.TSLogs)) {
+            console.log(`Adding ${j.TSLogs.length} TS logs to the timeline`);
+            allLogs = allLogs.concat(j.TSLogs);
+          }
+          
           setSourceStatus((prev) => ({ ...prev, [t]: 'done' }));
         } catch (e) {
+          console.error(`Failed to fetch logs for type ${t}:`, e);
           setSourceStatus((prev) => ({ ...prev, [t]: 'error' }));
         }
       }
@@ -73,10 +85,15 @@ export default function Home() {
     } catch (e: any) {
       setError(e.message || 'Failed');
       setData(null);
+      setSessionDocStatus({ status: 'error' });
     } finally { setLoading(false); }
   };
 
-  useEffect(() => { fetchSession(sessionId); }, []);
+  useEffect(() => { 
+    if (sessionId) {
+      fetchSession(sessionId); 
+    }
+  }, []);
 
   // const hypothesis = useMemo(() => {
   //   if (!data) return '—';
@@ -104,7 +121,7 @@ export default function Home() {
         />
 
         {loading && sourceOrder.length > 0 && (
-          <LogSourceLoader order={sourceOrder} status={sourceStatus} />
+          <LogSourceLoader order={sourceOrder} status={sourceStatus} sessionDocStatus={sessionDocStatus} />
         )}
 
         {data && data?.session && data.session.status === "Unknown" && (

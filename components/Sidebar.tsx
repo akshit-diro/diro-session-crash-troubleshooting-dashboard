@@ -31,7 +31,7 @@ export default function Sidebar({ components }: { components: ComponentData[] })
   return (
     <aside
       className={`fixed top-0 left-0 h-screen bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-700 z-10 overflow-hidden flex flex-col ${open ? '' : ''}`}
-      style={{ width: open ? '260px' : '40px' }}
+      style={{ width: open ? '220px' : '40px' }}
     >
       <div className={`flex items-center justify-between border-b border-slate-200 dark:border-slate-700 ${open ? 'px-3 py-2' : 'justify-center p-1.5'}`}>
         {open && <strong className="text-slate-800 dark:text-slate-100">Quick Links</strong>}

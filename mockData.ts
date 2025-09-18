@@ -67,12 +67,12 @@ export const logSourcesByComponent: LogSourcesByComponent = {
     { id: "033-diro_guac-graylogs", name: "033-diro_guac-graylogs", displayName: "Gray Logs" },
   ],
   terminal_server: [
-    { id: "061-TS_eventlogs-powershell", name: "061-TS_eventlogs-powershell", displayName: "Event Logs" },
-    { id: "062-TS_sessionlogs-powershell", name: "062-TS_sessionlogs-powershell", displayName: "Session Logs" },
-    { id: "063-TS_disconnectlogs-powershell", name: "063-TS_disconnectlogs-powershell", displayName: "Disconnect Logs" },
+    { id: "061-TS_eventlogs-graylogs", name: "061-TS_eventlogs-graylogs", displayName: "Event Logs" },
+    { id: "062-TS_sessionlogs-graylogs", name: "062-TS_sessionlogs-graylogs", displayName: "Session Logs" },
+    { id: "063-TS_disconnectlogs-graylogs", name: "063-TS_disconnectlogs-graylogs", displayName: "Disconnect Logs" },
   ],
   chrome: [
-    { id: "071-chrome-powershell", name: "071-chrome-powershell", displayName: "Browser Logs" },
+    { id: "071-chrome-graylogs", name: "071-chrome-graylogs", displayName: "Browser Logs" },
   ],
   an_extension: [
     { id: "041-an_extenstion-graylogs", name: "041-an_extenstion-graylogs", displayName: "Extension Logs" },
@@ -417,7 +417,7 @@ export const mockLogEntries: LogEntry[] = [
     id: "35",
     timestamp: "2025-09-06T03:00:54.000Z",
     component: "terminal_server",
-    logSource: "062-TS_sessionlogs-powershell",
+    logSource: "062-TS_sessionlogs-graylogs",
     level: "info",
     message: "Begin session arbitration",
     details: "User: DIROTS\\trustengine1075\nSession ID: 600\nEvent ID: 41\nLog: Microsoft-Windows-TerminalServices-LocalSessionManager/Operational"
@@ -426,7 +426,7 @@ export const mockLogEntries: LogEntry[] = [
     id: "36",
     timestamp: "2025-09-06T03:00:54.000Z",
     component: "terminal_server",
-    logSource: "062-TS_sessionlogs-powershell",
+    logSource: "062-TS_sessionlogs-graylogs",
     level: "info",
     message: "End session arbitration",
     details: "User: DIROTS\\trustengine1075\nSession ID: 600\nEvent ID: 42\nLog: Microsoft-Windows-TerminalServices-LocalSessionManager/Operational"
@@ -435,7 +435,7 @@ export const mockLogEntries: LogEntry[] = [
     id: "37",
     timestamp: "2025-09-06T03:00:55.000Z",
     component: "terminal_server",
-    logSource: "062-TS_sessionlogs-powershell",
+    logSource: "062-TS_sessionlogs-graylogs",
     level: "success",
     message: "Remote Desktop Services: Session logon succeeded",
     details: "User: DIROTS\\trustengine1075\nSession ID: 600\nSource Network Address: 172.20.2.81\nEvent ID: 21"
@@ -444,7 +444,7 @@ export const mockLogEntries: LogEntry[] = [
     id: "38",
     timestamp: "2025-09-06T03:00:55.000Z",
     component: "terminal_server",
-    logSource: "062-TS_sessionlogs-powershell",
+    logSource: "062-TS_sessionlogs-graylogs",
     level: "info",
     message: "Remote Desktop Services: Shell start notification received",
     details: "User: DIROTS\\trustengine1075\nSession ID: 600\nSource Network Address: 172.20.2.81\nEvent ID: 22"
@@ -453,7 +453,7 @@ export const mockLogEntries: LogEntry[] = [
     id: "39",
     timestamp: "2025-09-06T03:03:11.000Z",
     component: "terminal_server",
-    logSource: "062-TS_sessionlogs-powershell",
+    logSource: "062-TS_sessionlogs-graylogs",
     level: "warning",
     message: "Session 600 has been disconnected",
     details: "Session ID: 600\nEvent ID: 40\nLog: Microsoft-Windows-TerminalServices-LocalSessionManager/Operational"
@@ -462,7 +462,7 @@ export const mockLogEntries: LogEntry[] = [
     id: "40",
     timestamp: "2025-09-06T03:03:11.000Z",
     component: "terminal_server",
-    logSource: "062-TS_sessionlogs-powershell",
+    logSource: "062-TS_sessionlogs-graylogs",
     level: "info",
     message: "Remote Desktop Services: Session has been disconnected",
     details: "User: DIROTS\\trustengine1075\nSession ID: 600\nSource Network Address: 172.20.2.81\nEvent ID: 24"
@@ -471,7 +471,7 @@ export const mockLogEntries: LogEntry[] = [
     id: "41",
     timestamp: "2025-09-06T03:04:13.000Z",
     component: "terminal_server",
-    logSource: "062-TS_sessionlogs-powershell",
+    logSource: "062-TS_sessionlogs-graylogs",
     level: "info",
     message: "Remote Desktop Services: Session logoff succeeded",
     details: "User: DIROTS\\trustengine1075\nSession ID: 600\nEvent ID: 23\nLog: Microsoft-Windows-TerminalServices-LocalSessionManager/Operational"
@@ -482,16 +482,16 @@ export const mockLogEntries: LogEntry[] = [
     id: "42",
     timestamp: "2025-09-06T03:00:47.000Z",
     component: "terminal_server",
-    logSource: "063-TS_disconnectlogs-powershell",
+    logSource: "063-TS_disconnectlogs-graylogs",
     level: "info",
-    message: "PowerShell transcript started",
+    message: "Graylog transcript started",
     details: "Start Time: 20250906030047\nUsername: DIROTS\\parul.power\nMachine: WINTS-2019-STAG\nProcess ID: 66568\nScript: all_disconnected_session.ps1"
   },
   {
     id: "43",
     timestamp: "2025-09-06T03:00:47.000Z",
     component: "terminal_server",
-    logSource: "063-TS_disconnectlogs-powershell",
+    logSource: "063-TS_disconnectlogs-graylogs",
     level: "info",
     message: "Disconnected user: trustengine1082",
     details: "User: trustengine1082\nSession ID: 599\nAction: Disconnected user detected\nWait Time: 90 seconds before logoff"
@@ -500,7 +500,7 @@ export const mockLogEntries: LogEntry[] = [
     id: "44",
     timestamp: "2025-09-06T03:02:19.000Z",
     component: "terminal_server",
-    logSource: "063-TS_disconnectlogs-powershell",
+    logSource: "063-TS_disconnectlogs-graylogs",
     level: "info",
     message: "Logging off session ID: 599",
     details: "Session ID: 599\nUser: trustengine1082\nAction: Session logoff\nStatus: Completed"
@@ -509,7 +509,7 @@ export const mockLogEntries: LogEntry[] = [
     id: "45",
     timestamp: "2025-09-06T03:03:12.000Z",
     component: "terminal_server",
-    logSource: "063-TS_disconnectlogs-powershell",
+    logSource: "063-TS_disconnectlogs-graylogs",
     level: "info",
     message: "Disconnected user: trustengine1075",
     details: "User: trustengine1075\nSession ID: 600\nAutonav Active: true\nSession: US-ZqLRz0\nAction: Logoff not required"
@@ -518,7 +518,7 @@ export const mockLogEntries: LogEntry[] = [
     id: "46",
     timestamp: "2025-09-06T03:03:12.000Z",
     component: "terminal_server",
-    logSource: "063-TS_disconnectlogs-powershell",
+    logSource: "063-TS_disconnectlogs-graylogs",
     level: "info",
     message: "Waiting 60 seconds before logging off user trustengine1075",
     details: "User: trustengine1075\nSession: US-ZqLRz0\nWait Time: 60 seconds\nReason: Autonav active session"

@@ -45,8 +45,10 @@ export function configFromEnv(): GraylogConfig | null {
     .map((s) => s.trim())
     .filter(Boolean);
 
-  const rangeMinutes = parseInt(process.env.GRAYLOG_RANGE_MINUTES || '120', 10);
-  const limit = parseInt(process.env.GRAYLOG_LIMIT || '500', 10);
+  // If GRAYLOG_RANGE_MINUTES is not set or is 0, use 0 to indicate all-time search
+  const rangeMinutes = process.env.GRAYLOG_RANGE_MINUTES ? parseInt(process.env.GRAYLOG_RANGE_MINUTES, 10) : 0;
+  // If GRAYLOG_LIMIT is not set or is 0, use 0 to indicate no limit (fetch all data)
+  const limit = process.env.GRAYLOG_LIMIT ? parseInt(process.env.GRAYLOG_LIMIT, 10) : 0;
   const queryPrefix = process.env.GRAYLOG_QUERY_PREFIX || undefined;
 
   const cfg: GraylogConfig = { baseUrl, authHeader, streams: streams.length ? streams : undefined, rangeMinutes, limit, queryPrefix };
@@ -56,8 +58,8 @@ export function configFromEnv(): GraylogConfig | null {
         baseUrl,
         auth: token ? 'token' : 'basic',
         streams: cfg.streams?.length ? `${cfg.streams.length} stream(s)` : 'none',
-        rangeMinutes,
-        limit,
+        rangeMinutes: rangeMinutes > 0 ? `${rangeMinutes} minutes` : 'all-time',
+        limit: limit > 0 ? `${limit} messages` : 'no-limit (all data)',
         queryPrefix: queryPrefix || '(none)'
       });
   }
@@ -194,20 +196,24 @@ function processGraylogMessage(wrapper: any, sessionId: string): LogEntry {
   const msg: string = m.full_message || m.message || m.short_message || '';
   const lvl = mapLevel(m.level);
 
-  const detailsObj: Record<string, any> = { 
-    index: wrapper?.index, 
-    stream_ids: m.streams || m.stream_ids, 
-    source: m.source,
-    original_component: originalComponent, // Keep original for debugging
-    session_id: sessionId, // Include session ID for filtering
-    message: m.message || '', // Include message field
-    full_message: m.full_message || '' // Include full message separately
+  // Include ALL fields from the actual log message only (not wrapper metadata)
+  // Filter out gl2* and streams fields
+  const filteredMessage = Object.keys(m).reduce((acc: Record<string, any>, key: string) => {
+    // Skip fields starting with 'gl2' and the 'streams' field
+    if (!key.startsWith('gl2') && key !== 'streams') {
+      acc[key] = m[key];
+    }
+    return acc;
+  }, {});
+
+  const detailsObj: Record<string, any> = {
+    // Add our tracking fields
+    session_id: sessionId,
+    original_component: originalComponent,
+    
+    // Include filtered fields from the original log message (m) - this contains the actual log data
+    ...filteredMessage
   };
-  
-  // Keep a few additional fields when present
-  for (const k of ['facility', 'file', 'line', 'logger', 'thread', 'class', 'module']) {
-    if (m[k] != null) detailsObj[k] = m[k];
-  }
 
   return {
     id: String(id),
@@ -216,21 +222,27 @@ function processGraylogMessage(wrapper: any, sessionId: string): LogEntry {
     logSource: logSource,
     level: lvl,
     message: String(msg),
-    details: JSON.stringify(detailsObj),
+    details: JSON.stringify(detailsObj, null, 2), // Pretty print for better readability
   };
 }
 
 export async function fetchGraylogLogs(sessionId: string, cfg?: GraylogConfig | null): Promise<LogEntry[]> {
-  console.log('fetchGraylogLogs', sessionId, cfg);
-  
   const conf = cfg ?? configFromEnv();
   if (!conf) throw new Error('Graylog not configured (missing GRAYLOG_* env vars)');
+  
+  const rangeDescription = conf.rangeMinutes === 0 ? 'ALL-TIME' : `${conf.rangeMinutes} minutes`;
+  const limitDescription = conf.limit === 0 ? 'NO-LIMIT' : `${conf.limit} messages`;
+  console.log(`fetchGraylogLogs for session ${sessionId} - Range: ${rangeDescription}, Limit: ${limitDescription}`);
 
   const query = buildQuery(sessionId, conf.queryPrefix, conf.streams);
   const params = new URLSearchParams();
   params.set('query', query);
-  params.set('range', String(conf.rangeMinutes));
-  params.set('limit', String(conf.limit));
+  
+  // Only set limit if it's greater than 0, otherwise fetch all data
+  if (conf.limit > 0) {
+    params.set('limit', String(conf.limit));
+  }
+  
   params.set('sort', 'timestamp:asc');
   
   // If exactly one stream provided, use filter param for efficiency
@@ -238,7 +250,20 @@ export async function fetchGraylogLogs(sessionId: string, cfg?: GraylogConfig | 
     params.set('filter', `streams:${conf.streams[0]}`);
   }
   
-  const url = `${conf.baseUrl.replace(/\/$/, '')}/api/search/universal/relative?${params.toString()}`;
+  // Choose endpoint based on range configuration
+  let endpoint: string;
+  if (conf.rangeMinutes > 0) {
+    // Use relative search with time range
+    params.set('range', String(conf.rangeMinutes));
+    endpoint = '/api/search/universal/relative';
+  } else {
+    // Use relative search with a very large range for all-time search
+    // This is more reliable than absolute search which requires specific from/to dates
+    params.set('range', String(365 * 24 * 60)); // 1 year in minutes (525,600 minutes)
+    endpoint = '/api/search/universal/relative';
+  }
+  
+  const url = `${conf.baseUrl.replace(/\/$/, '')}${endpoint}?${params.toString()}`;
   const headers: Record<string, string> = {
     Accept: 'application/json',
     Authorization: conf.authHeader,
@@ -248,7 +273,13 @@ export async function fetchGraylogLogs(sessionId: string, cfg?: GraylogConfig | 
   if (isDebug()) {
     const previewHeaders = { ...headers };
     if (previewHeaders.Authorization) previewHeaders.Authorization = '(redacted)';
-    dbg('request', { url, params: Object.fromEntries(params.entries()), headers: previewHeaders });
+    dbg('request', { 
+      url, 
+      endpoint: conf.rangeMinutes > 0 ? 'relative (time-ranged)' : 'relative (all-time: 1 year)',
+      limit: conf.limit > 0 ? `${conf.limit} messages` : 'no-limit (all data)',
+      params: Object.fromEntries(params.entries()), 
+      headers: previewHeaders 
+    });
     dbg('query parts', { sessionId, queryPrefix: conf.queryPrefix || '(none)', streams: conf.streams || [] });
   }
 
@@ -258,7 +289,129 @@ export async function fetchGraylogLogs(sessionId: string, cfg?: GraylogConfig | 
 
   if (isDebug()) {
     dbg('mapped entries', { count: out.length });
+    if (out.length > 0) {
+      const firstEntry = out[0];
+      const detailsObj = JSON.parse(firstEntry.details);
+      const fieldCount = Object.keys(detailsObj).length;
+      dbg('sample entry fields (log data only)', { 
+        totalFields: fieldCount,
+        availableFields: Object.keys(detailsObj).slice(0, 10), // Show first 10 fields
+        hasMoreFields: fieldCount > 10
+      });
+    }
   }
 
   return out;
+}
+
+// Fetch TS logs from Graylog with time-based query
+export async function fetchTSLogsFromGraylog(startTime: string): Promise<LogEntry[]> {
+  const conf = configFromEnv();
+  if (!conf) {
+    console.warn('Graylog not configured for TS logs, returning empty array');
+    return [];
+  }
+
+  try {
+    // Calculate time range: startTime - 10min to startTime + 40min
+    const startDate = new Date(startTime);
+    const fromTime = new Date(startDate.getTime() - 10 * 60 * 1000); // -10 minutes
+    const toTime = new Date(startDate.getTime() + 40 * 60 * 1000);   // +40 minutes
+    
+    // Debug logging to verify time calculations
+    console.log(`TS Logs Time Calculation:`);
+    console.log(`  Input startTime: ${startTime}`);
+    console.log(`  Parsed startDate: ${startDate.toISOString()}`);
+    console.log(`  From Time (-10 min): ${fromTime.toISOString()}`);
+    console.log(`  To Time (+40 min): ${toTime.toISOString()}`);
+    console.log(`  Total Range: ${(toTime.getTime() - fromTime.getTime()) / (60 * 1000)} minutes`);
+    
+    const query = 'WINTS-2019-STAGE1';
+    const params = new URLSearchParams();
+    params.set('query', query);
+    params.set('from', fromTime.toISOString());
+    params.set('to', toTime.toISOString());
+    
+    // Only set limit if it's greater than 0, otherwise fetch all data
+    if (conf.limit > 0) {
+      params.set('limit', String(conf.limit));
+    }
+    
+    params.set('sort', 'timestamp:asc');
+    
+    // Use absolute search with specific time range
+    const url = `${conf.baseUrl.replace(/\/$/, '')}/api/search/universal/absolute?${params.toString()}`;
+    const headers: Record<string, string> = {
+      Accept: 'application/json',
+      Authorization: conf.authHeader,
+      'X-Requested-By': 'diro-session-troubleshooting',
+    };
+
+    console.log(`Fetching TS logs from ${fromTime.toISOString()} to ${toTime.toISOString()}`);
+    
+    if (isDebug()) {
+      const previewHeaders = { ...headers };
+      if (previewHeaders.Authorization) previewHeaders.Authorization = '(redacted)';
+      dbg('TS logs request', { 
+        url, 
+        query,
+        timeRange: `${fromTime.toISOString()} to ${toTime.toISOString()}`,
+        params: Object.fromEntries(params.entries()), 
+        headers: previewHeaders 
+      });
+    }
+
+    const body = await performGraylogRequest(url, headers);
+    const messages: any[] = Array.isArray(body?.messages) ? body.messages : [];
+    
+    // Process TS logs with ALL data preserved
+    const out: LogEntry[] = messages.map(wrapper => {
+      const m = wrapper?.message || wrapper || {};
+      const id: string = m._id || m.id || `ts-${m.timestamp || ''}-${Math.random().toString(36).slice(2)}`;
+      const ts: string = m.timestamp || m['@timestamp'] || new Date().toISOString();
+      const msg: string = m.full_message || m.message || m.short_message || '';
+      const lvl = mapLevel(m.level);
+
+      // Include ALL fields from the actual TS log message only (not wrapper metadata)
+      const detailsObj: Record<string, any> = {
+        // Add TS-specific tracking
+        ts_query: query,
+        original_component: m.component || m.source || 'terminal_server',
+        
+        // Include ALL fields from the original log message (m) - this contains the actual log data
+        ...m
+      };
+
+      return {
+        id: String(id),
+        timestamp: new Date(ts).toISOString(),
+        component: 'terminal_server',
+        logSource: '061-TS_eventlogs-graylogs',
+        level: lvl,
+        message: String(msg),
+        details: JSON.stringify(detailsObj, null, 2), // Pretty print for better readability
+      };
+    });
+
+    if (isDebug()) {
+      dbg('TS logs mapped entries', { count: out.length });
+      if (out.length > 0) {
+        const firstEntry = out[0];
+        const detailsObj = JSON.parse(firstEntry.details);
+        const fieldCount = Object.keys(detailsObj).length;
+        dbg('TS logs sample entry fields (log data only)', { 
+          totalFields: fieldCount,
+          availableFields: Object.keys(detailsObj).slice(0, 10), // Show first 10 fields
+          hasMoreFields: fieldCount > 10
+        });
+      }
+    }
+
+    console.log(`Fetched ${out.length} TS log entries from Graylog`);
+    return out;
+    
+  } catch (error) {
+    console.error('Failed to fetch TS logs from Graylog:', error);
+    return [];
+  }
 }

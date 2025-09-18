@@ -6,19 +6,22 @@ export interface FiltersState {
   sources: Set<string>;
 }
 
+interface FiltersProps {
+  readonly componentsData: ComponentData[];
+  readonly lastTimestamps: Record<string, string>;
+  readonly state: FiltersState;
+  readonly onChange: (next: FiltersState) => void;
+  readonly mode?: 'full' | 'compact';
+}
+
 export default function Filters({
   componentsData,
   lastTimestamps,
   state,
   onChange,
   mode = 'full'
-}: {
-  componentsData: ComponentData[];
-  lastTimestamps: Record<string, string>;
-  state: FiltersState;
-  onChange: (next: FiltersState) => void;
-  mode?: 'full' | 'compact';
-}) {
+}: FiltersProps) {
+  return;
   const toggleComp = (id: string) => {
     const next = new Set(state.components);
     next.has(id) ? next.delete(id) : next.add(id);
